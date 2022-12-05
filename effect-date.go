@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+// slice of french Holidays
+// maybe one day this package will be increased with other countries holidays ! ;)
 var frenchHolidays []string = []string{
 	"2021-01-01", "2021-04-05", "2021-05-01", "2021-05-08", "2021-05-13", "2021-05-24", "2021-07-14", "2021-08-15", "2021-11-01", "2021-11-11", "2021-12-25",
 	"2022-01-01", "2022-04-18", "2022-05-01", "2022-05-08", "2022-05-26", "2022-06-06", "2022-07-14", "2022-08-15", "2022-11-01", "2022-11-11", "2022-12-25",
@@ -16,6 +18,7 @@ var frenchHolidays []string = []string{
 
 var holidaysMap map[time.Time]bool
 
+// init function only generates a map of holidays
 func init() {
 	holidaysMap = make(map[time.Time]bool)
 	for _, day := range frenchHolidays {
@@ -24,24 +27,31 @@ func init() {
 	}
 }
 
+// GetEffectDate will return an isoDate from an input isoDate after a delay (positive or negative number of days)
+// and takes care or not about weekends and holydays (is the openDays flag is set to true)
 func GetEffectDate(isoDate string, delay int, openDays bool) (string, error) {
 
+	//rapid return if invalid input date
 	inputDate, err := time.Parse("2006-01-02", isoDate)
 	if err != nil {
 		return "", err
 	}
 
+	//rapid return if no delay
 	if delay == 0 {
 		return isoDate, nil
 	}
 
+	//forward function when a new day is found
 	forward := func() {
 		delay--
 	}
+	//increaseTime function for search the next day
 	increaseTime := func() {
 		inputDate = inputDate.Add(time.Hour * 24)
 	}
 
+	//invert forward and increaseTime for negative delays
 	if delay < 0 {
 		forward = func() {
 			delay++
@@ -53,7 +63,7 @@ func GetEffectDate(isoDate string, delay int, openDays bool) (string, error) {
 
 	for delay != 0 {
 		increaseTime()
-
+		//skip the day for week ends and holydays in "openDays" mode
 		if _, ok := holidaysMap[inputDate]; !openDays || (int(inputDate.Weekday()) != 0 && int(inputDate.Weekday()) != 6 && !ok) {
 			forward()
 		}
